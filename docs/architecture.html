@@ -1,24 +1,56 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="no-js">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8">
+  <script>document.documentElement.classList.replace('no-js', 'js')</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Architecture — hood-traders</title>
-  <meta name="description" content="The observe → decide → simulate → risk-check → execute → journal loop behind every hood-traders agent." />
-  <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2032%2032%27%3E%3Cdefs%3E%3ClinearGradient%20id%3D%27g%27%20x1%3D%270%27%20y1%3D%270%27%20x2%3D%271%27%20y2%3D%271%27%3E%3Cstop%20offset%3D%270%27%20stop-color%3D%27%236d5ef8%27%2F%3E%3Cstop%20offset%3D%271%27%20stop-color%3D%27%232fd0e0%27%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Ccircle%20cx%3D%2716%27%20cy%3D%2716%27%20r%3D%2713%27%20fill%3D%27url(%23g)%27%2F%3E%3C%2Fsvg%3E" />
-  <link rel="stylesheet" href="style.css" />
+  <meta name="description" content="The observe → decide → simulate → risk-check → execute → journal pipeline behind every hood-traders agent, traced step by step, plus the full risk-rails table and paper-vs-live guarantees.">
+  <link rel="canonical" href="https://nirholas.github.io/robinhood-chain-trading-bot/architecture.html">
+  <meta property="og:title" content="Architecture — hood-traders">
+  <meta property="og:description" content="The observe → decide → simulate → risk-check → execute → journal pipeline behind every hood-traders agent, traced step by step.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://nirholas.github.io/robinhood-chain-trading-bot/architecture.html">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Architecture — hood-traders">
+  <meta name="twitter:description" content="The observe → decide → simulate → risk-check → execute → journal pipeline, traced step by step.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2032%2032'%3E%3Crect%20width%3D'32'%20height%3D'32'%20fill%3D'%230a0a0a'%2F%3E%3Cpath%20d%3D'M7%2C10L15%2C16L7%2C22'%20stroke%3D'%23f2f2f2'%20stroke-width%3D'3'%20fill%3D'none'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%2F%3E%3Crect%20x%3D'18'%20y%3D'19'%20width%3D'9'%20height%3D'3'%20fill%3D'%23f2f2f2'%2F%3E%3C%2Fsvg%3E">
+  <link rel="stylesheet" href="terminal.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareSourceCode",
+    "name": "hood-traders",
+    "description": "The observe, decide, simulate, risk-check, execute, journal pipeline behind every hood-traders trading agent on Robinhood Chain.",
+    "url": "https://nirholas.github.io/robinhood-chain-trading-bot/architecture.html",
+    "codeRepository": "https://github.com/nirholas/robinhood-chain-trading-bot",
+    "programmingLanguage": "TypeScript",
+    "runtimePlatform": "Node.js",
+    "license": "https://github.com/nirholas/robinhood-chain-trading-bot/blob/main/LICENSE",
+    "author": { "@type": "Person", "name": "nirholas", "url": "https://x.com/nichxbt" }
+  }
+  </script>
 </head>
 <body>
-  <nav class="topnav">
-    <div class="brand"><span class="dot"></span>hood-traders</div>
-    <div class="links">
-      <a href="index.html">Overview</a>
-      <a href="architecture.html" class="active">Architecture</a>
-      <a href="strategies.html">Strategies</a>
-      <a href="quickstart.html">Quickstart</a>
-      <a href="https://github.com/nirholas/hood-traders" target="_blank" rel="noopener">GitHub ↗</a>
+  <nav class="tabline" aria-label="Pages">
+    <span class="tabline__brand"><span class="prompt">~/</span>hood-traders</span>
+    <div class="tabline__pages">
+      <a href="index.html">index</a>
+      <a href="architecture.html" aria-current="page">architecture</a>
+      <a href="strategies.html">strategies</a>
+      <a href="quickstart.html">quickstart</a>
     </div>
+    <a class="gh" href="https://github.com/nirholas/robinhood-chain-trading-bot" target="_blank" rel="noopener">github ↗</a>
   </nav>
+
+  <section class="tickertape" aria-label="Live Robinhood Chain mainnet data">
+    <span class="tickertape__label">live//</span>
+    <div class="tickertape__viewport">
+      <div class="tickertape__track" id="ticker-track">
+        <span class="tickertape__item">connecting to rpc.mainnet.chain.robinhood.com… (requires JavaScript)</span>
+      </div>
+    </div>
+  </section>
 
   <div class="wrap">
     <h1>Architecture</h1>
@@ -29,10 +61,17 @@
     </p>
 
     <h2>The pipeline</h2>
-    <div class="flow-diagram">
-      <div class="flow-step">
-        <div class="flow-num">1</div>
-        <div class="flow-body">
+    <p>Read top to bottom, like a trace. Six stages, every tick, no shortcuts.</p>
+
+    <div class="trace-controls">
+      <button id="replay-trace" type="button">▸ replay trace</button>
+      <span class="hint">re-plays the six stages below in sequence</span>
+    </div>
+
+    <div class="trace" id="trace">
+      <div class="trace-step" data-step="1">
+        <div class="trace-step__num">01</div>
+        <div class="trace-step__body">
           <h3>Observe — <code>Market</code> (<code>src/framework/market.ts</code>)</h3>
           <p>
             Every number a strategy sees comes from a live RPC call through the <code>hoodchain</code>
@@ -43,9 +82,9 @@
           </p>
         </div>
       </div>
-      <div class="flow-step">
-        <div class="flow-num">2</div>
-        <div class="flow-body">
+      <div class="trace-step" data-step="2">
+        <div class="trace-step__num">02</div>
+        <div class="trace-step__body">
           <h3>Decide — <code>Strategy.tick()</code></h3>
           <p>
             Pure function of the current market view and open positions to a <code>Decision</code>:
@@ -54,9 +93,9 @@
           </p>
         </div>
       </div>
-      <div class="flow-step">
-        <div class="flow-num">3</div>
-        <div class="flow-body">
+      <div class="trace-step" data-step="3">
+        <div class="trace-step__num">03</div>
+        <div class="trace-step__body">
           <h3>Simulate — a real <code>eth_call</code></h3>
           <p>
             Every intent is re-quoted against live liquidity via <code>QuoterV2</code> before
@@ -65,21 +104,21 @@
           </p>
         </div>
       </div>
-      <div class="flow-step">
-        <div class="flow-num">4</div>
-        <div class="flow-body">
+      <div class="trace-step" data-step="4">
+        <div class="trace-step__num">04</div>
+        <div class="trace-step__body">
           <h3>Risk-check — <code>RiskEngine.check()</code> (fails CLOSED)</h3>
           <p>
             Kill switch → zero/negative amount → cooldown → slippage bound → position cap → agent
             daily cap → fleet daily cap, in that order, so the journaled refusal reason is always
             the most specific true one. Any check the engine cannot satisfy refuses the trade —
-            there is no default-allow path. See the full table below.
+            there is no default-allow path. See the risk rails table below.
           </p>
         </div>
       </div>
-      <div class="flow-step">
-        <div class="flow-num">5</div>
-        <div class="flow-body">
+      <div class="trace-step" data-step="5">
+        <div class="trace-step__num">05</div>
+        <div class="trace-step__body">
           <h3>Execute</h3>
           <p>
             <strong>Paper:</strong> the simulated fill is recorded as the trade — same code path,
@@ -90,9 +129,9 @@
           </p>
         </div>
       </div>
-      <div class="flow-step">
-        <div class="flow-num">6</div>
-        <div class="flow-body">
+      <div class="trace-step" data-step="6">
+        <div class="trace-step__num">06</div>
+        <div class="trace-step__body">
           <h3>Journal — SQLite (<code>src/framework/journal.ts</code>)</h3>
           <p>
             Every trade AND every refusal is written, with the strategy's reason string, the risk
@@ -104,7 +143,9 @@
       </div>
     </div>
 
-    <h2>Risk rails</h2>
+    <hr class="rule" aria-hidden="true">
+
+    <h2 id="risk-rails">Risk rails</h2>
     <p>Every rail applies identically in paper and live mode. Sells are exempt from the position/spend caps — they reduce risk, and refusing a de-risking sell because of a spend cap would trap an agent in a losing position.</p>
     <table class="risk-table">
       <thead><tr><th>Rail</th><th>Env var</th><th>Enforced where</th></tr></thead>
@@ -118,7 +159,7 @@
       </tbody>
     </table>
 
-    <h2>Paper vs. live</h2>
+    <h2 id="paper-vs-live">Paper vs. live</h2>
     <p>
       Paper mode runs the <em>identical</em> pipeline against <em>identical</em> live data — the
       only difference is step 5: paper records the QuoterV2-simulated fill as the trade, live
@@ -129,7 +170,7 @@
       accidental-live path.
     </p>
 
-    <h2>Why a fresh framework and not hoodkit</h2>
+    <h2 id="why-not-hoodkit">Why a fresh framework and not hoodkit</h2>
     <p>
       This package's prompt called for building on <code>hoodkit</code> (the wave-2 advanced
       SDK wrapper) if it existed. At build time it had not shipped, so <code>hood-traders</code>
@@ -142,5 +183,40 @@
       <span>Built by <a href="https://x.com/nichxbt" target="_blank" rel="noopener">nirholas</a> · <a href="https://three.ws" target="_blank" rel="noopener">three.ws</a></span>
     </footer>
   </div>
+
+  <div class="cmdbar" role="presentation">
+    <span class="cmdbar__prompt" aria-hidden="true">:</span>
+    <input id="cmdbar-input" class="cmdbar__input" type="text" role="combobox" aria-expanded="false" aria-controls="cmdbar-listbox" aria-autocomplete="list" aria-label="Jump to a page or section" autocomplete="off" spellcheck="false" placeholder="jump to&hellip; try &quot;arch&quot;, &quot;llm&quot;, &quot;quick&quot;">
+    <span id="cmdbar-status" class="cmdbar__status" aria-live="polite"></span>
+    <span class="cmdbar__hint">/ or : focus · ↑↓ Enter · Esc</span>
+  </div>
+  <ul id="cmdbar-listbox" class="cmdbar__listbox" role="listbox" aria-label="Matching sections" hidden></ul>
+
+  <script src="live-ticker.js" type="module"></script>
+  <script src="command-bar.js" type="module"></script>
+  <script type="module">
+    // Trace replay — a decorative, purely client-side re-play of the six
+    // pipeline stages above. It does not measure or claim any real timing;
+    // it is a reading aid, not a benchmark. Base state (no JS) is simply the
+    // six stages laid out in document order.
+    const btn = document.getElementById('replay-trace')
+    const steps = Array.from(document.querySelectorAll('.trace-step'))
+    let running = false
+
+    async function replay() {
+      if (running) return
+      running = true
+      btn.disabled = true
+      steps.forEach((s) => s.classList.add('is-pending'))
+      for (const step of steps) {
+        await new Promise((r) => setTimeout(r, 260))
+        step.classList.remove('is-pending')
+      }
+      btn.disabled = false
+      running = false
+    }
+
+    btn.addEventListener('click', replay)
+  </script>
 </body>
 </html>

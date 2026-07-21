@@ -3,6 +3,11 @@
 // read-only capability any client of the chain has. Two calls:
 //   1. eth_blockNumber           — chain liveness
 //   2. eth_call latestRoundData  — AAPL's Chainlink feed, decoded by hand
+//
+// Renders into the fixed ticker-tape strip pinned under the tabline on every
+// page (see terminal.css .tickertape). The strip is display:contents-free —
+// this script just fills #ticker-track twice back-to-back so the CSS marquee
+// animation (translateX -50%) loops seamlessly.
 
 const RPC_URL = 'https://rpc.mainnet.chain.robinhood.com'
 const AAPL_FEED = '0x6B22A786bAa607d76728168703a39Ea9C99f2cD0'
@@ -30,29 +35,33 @@ function decodeLatestRoundData(hex) {
   return { answer, updatedAt }
 }
 
-function tile(label, value) {
-  return `<div class="stat-tile"><div class="stat-label">${label}</div><div class="stat-value">${value}</div></div>`
+function item(label, value) {
+  return `<span class="tickertape__item">${label} <b>${value}</b></span><span class="tickertape__sep" aria-hidden="true">/</span>`
 }
 
 async function refresh() {
-  const el = document.getElementById('live-ticker')
+  const track = document.getElementById('ticker-track')
+  if (!track) return
   try {
-    const [blockHex] = await Promise.all([rpc('eth_blockNumber', [])])
+    const [blockHex, callResult] = await Promise.all([
+      rpc('eth_blockNumber', []),
+      rpc('eth_call', [{ to: AAPL_FEED, data: LATEST_ROUND_DATA_SELECTOR }, 'latest']),
+    ])
     const blockNumber = BigInt(blockHex).toLocaleString('en-US')
-
-    const callResult = await rpc('eth_call', [{ to: AAPL_FEED, data: LATEST_ROUND_DATA_SELECTOR }, 'latest'])
     const { answer, updatedAt } = decodeLatestRoundData(callResult)
     const priceUsd = (Number(answer) / 1e8).toFixed(2)
     const ageMin = Math.max(0, Math.floor(Date.now() / 1000 - updatedAt) / 60).toFixed(0)
 
-    el.innerHTML = [
-      tile('Mainnet block (4663)', blockNumber),
-      tile('AAPL token (Chainlink)', `$${priceUsd}`),
-      tile('Feed age', `${ageMin}m`),
-      tile('RPC', 'rpc.mainnet.chain.robinhood.com'),
+    const items = [
+      item('robinhood-chain:4663 block', blockNumber),
+      item('AAPL · Chainlink', `$${priceUsd}`),
+      item('feed age', `${ageMin}m`),
+      item('rpc', 'rpc.mainnet.chain.robinhood.com'),
     ].join('')
+    // duplicate the content so the CSS -50% translateX loop is seamless
+    track.innerHTML = items + items
   } catch (err) {
-    el.innerHTML = `<div class="state-block">Couldn't reach the public RPC from your browser: ${err.message}</div>`
+    track.innerHTML = `<span class="tickertape__item">could not reach the public RPC from your browser: ${err.message}</span>`
   }
 }
 

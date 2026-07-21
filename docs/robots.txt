@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://nirholas.github.io/robinhood-chain-trading-bot/sitemap.xml

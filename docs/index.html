@@ -1,31 +1,63 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="no-js">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8">
+  <script>document.documentElement.classList.replace('no-js', 'js')</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>hood-traders — autonomous trading agents for Robinhood Chain</title>
-  <meta name="description" content="A framework and runnable fleet of autonomous agents that trade Robinhood Chain memecoins and watch Stock Token premium/discount — including an optional bring-your-own-key LLM strategist (Claude, OpenAI, Groq, or OpenRouter). Real risk caps, real signed swaps, live decision journal." />
-  <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2032%2032%27%3E%3Cdefs%3E%3ClinearGradient%20id%3D%27g%27%20x1%3D%270%27%20y1%3D%270%27%20x2%3D%271%27%20y2%3D%271%27%3E%3Cstop%20offset%3D%270%27%20stop-color%3D%27%236d5ef8%27%2F%3E%3Cstop%20offset%3D%271%27%20stop-color%3D%27%232fd0e0%27%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Ccircle%20cx%3D%2716%27%20cy%3D%2716%27%20r%3D%2713%27%20fill%3D%27url(%23g)%27%2F%3E%3C%2Fsvg%3E" />
-  <link rel="stylesheet" href="style.css" />
+  <meta name="description" content="A framework and runnable fleet of autonomous agents that trade Robinhood Chain memecoins and watch Stock Token premium/discount — including an optional bring-your-own-key LLM strategist (Claude, OpenAI, Groq, or OpenRouter). Real risk caps, real signed swaps, live decision journal.">
+  <link rel="canonical" href="https://nirholas.github.io/robinhood-chain-trading-bot/">
+  <meta property="og:title" content="hood-traders — autonomous trading agents for Robinhood Chain">
+  <meta property="og:description" content="A framework and runnable fleet of autonomous agents that trade Robinhood Chain memecoins and watch Stock Token premium/discount. Real risk caps, real signed swaps, live decision journal.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://nirholas.github.io/robinhood-chain-trading-bot/">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="hood-traders — autonomous trading agents for Robinhood Chain">
+  <meta name="twitter:description" content="A framework and runnable fleet of autonomous agents that trade Robinhood Chain memecoins and watch Stock Token premium/discount. Real risk caps, real signed swaps, live decision journal.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2032%2032'%3E%3Crect%20width%3D'32'%20height%3D'32'%20fill%3D'%230a0a0a'%2F%3E%3Cpath%20d%3D'M7%2C10L15%2C16L7%2C22'%20stroke%3D'%23f2f2f2'%20stroke-width%3D'3'%20fill%3D'none'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%2F%3E%3Crect%20x%3D'18'%20y%3D'19'%20width%3D'9'%20height%3D'3'%20fill%3D'%23f2f2f2'%2F%3E%3C%2Fsvg%3E">
+  <link rel="stylesheet" href="terminal.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareSourceCode",
+    "name": "hood-traders",
+    "description": "A framework and runnable fleet of autonomous agents that trade Robinhood Chain (chain ID 4663) memecoins and watch Stock Token premium/discount, with real risk caps, real signed swaps, and a live decision journal.",
+    "url": "https://nirholas.github.io/robinhood-chain-trading-bot/",
+    "codeRepository": "https://github.com/nirholas/robinhood-chain-trading-bot",
+    "programmingLanguage": "TypeScript",
+    "runtimePlatform": "Node.js",
+    "license": "https://github.com/nirholas/robinhood-chain-trading-bot/blob/main/LICENSE",
+    "author": { "@type": "Person", "name": "nirholas", "url": "https://x.com/nichxbt" }
+  }
+  </script>
 </head>
 <body>
-  <nav class="topnav">
-    <div class="brand"><span class="dot"></span>hood-traders</div>
-    <div class="links">
-      <a href="index.html" class="active">Overview</a>
-      <a href="architecture.html">Architecture</a>
-      <a href="strategies.html">Strategies</a>
-      <a href="quickstart.html">Quickstart</a>
-      <a href="https://github.com/nirholas/hood-traders" target="_blank" rel="noopener">GitHub ↗</a>
+  <nav class="tabline" aria-label="Pages">
+    <span class="tabline__brand"><span class="prompt">~/</span>hood-traders</span>
+    <div class="tabline__pages">
+      <a href="index.html" aria-current="page">index</a>
+      <a href="architecture.html">architecture</a>
+      <a href="strategies.html">strategies</a>
+      <a href="quickstart.html">quickstart</a>
     </div>
+    <a class="gh" href="https://github.com/nirholas/robinhood-chain-trading-bot" target="_blank" rel="noopener">github ↗</a>
   </nav>
+
+  <section class="tickertape" aria-label="Live Robinhood Chain mainnet data">
+    <span class="tickertape__label">live//</span>
+    <div class="tickertape__viewport">
+      <div class="tickertape__track" id="ticker-track">
+        <span class="tickertape__item">connecting to rpc.mainnet.chain.robinhood.com… (ticker requires JavaScript — see below)</span>
+      </div>
+    </div>
+  </section>
 
   <div class="wrap">
     <section class="hero">
-      <div class="hero-badges">
-        <span class="badge paper">◆ paper mode by default</span>
-        <span class="badge">Robinhood Chain 4663 / 46630</span>
-        <span class="badge">Apache-2.0 licensed</span>
+      <div class="hero__badges">
+        <span class="badge badge--solid">◆ paper mode by default</span>
+        <span class="badge">robinhood chain 4663 / 46630</span>
+        <span class="badge">source on github</span>
       </div>
       <h1>Autonomous agents that trade Robinhood Chain — with real risk caps and a live decision journal.</h1>
       <p class="lede">
@@ -36,65 +68,67 @@
         bring-your-own-key LLM strategist.
       </p>
       <div class="cta-row">
-        <a class="btn primary" href="quickstart.html">Run your own fleet →</a>
-        <a class="btn secondary" href="architecture.html">See how it works</a>
+        <a class="btn btn--primary" href="quickstart.html">run your own fleet →</a>
+        <a class="btn btn--ghost" href="architecture.html">see how it works</a>
       </div>
     </section>
 
-    <section aria-live="polite">
-      <h2>Live from Robinhood Chain mainnet</h2>
+    <hr class="rule" aria-hidden="true">
+
+    <section id="live" aria-labelledby="live-heading">
+      <h2 id="live-heading">Live from Robinhood Chain mainnet</h2>
       <p>
-        This ticker calls the public RPC directly from your browser right now — no server, no
-        SDK bundle, just a raw JSON-RPC POST. It's the same chain the fleet trades on.
+        The ticker tape pinned under the tab strip at the top of this page calls the public RPC
+        directly from your browser right now — no server, no SDK bundle, just a raw JSON-RPC POST.
+        It's the same chain the fleet trades on: current block height on 4663, and AAPL's Chainlink
+        feed decoded by hand from a raw <code>eth_call</code>. Open the browser console — there's
+        nothing hidden, <code>docs/live-ticker.js</code> is the entire client.
       </p>
-      <div id="live-ticker" class="stat-grid">
-        <div class="stat-tile"><div class="stat-label">Loading…</div><div class="stat-value">—</div></div>
-      </div>
     </section>
 
-    <section>
-      <h2>A captured paper session</h2>
+    <section id="session" aria-labelledby="session-heading">
+      <h2 id="session-heading">A captured paper session</h2>
       <p>
         The numbers below are a real ≥30-minute paper-mode run against live mainnet data — not a
         mockup. <strong>Paper mode</strong>: every fill is simulated against the real Uniswap v3
         quote, no funds moved. See the full methodology in <a href="architecture.html">Architecture</a>.
       </p>
-      <div id="session-summary" class="stat-grid">
-        <div class="state-block">Session data loads from <code>session.json</code> after a captured run — see the repo's <code>tests/e2e/</code> for the harness.</div>
+      <div id="session-summary" class="stat-log">
+        <div class="state-block">Session data loads from <code>session.json</code> after a captured run — see <code>scripts/capture-session.mjs</code> in the repo.</div>
       </div>
       <h3>Decision journal excerpt</h3>
-      <div id="session-journal" class="journal-feed"></div>
+      <div id="session-journal" class="journal"></div>
     </section>
 
-    <section>
-      <h2>Four strategies, honestly documented</h2>
-      <div class="card-grid">
-        <div class="card">
-          <h3>launch-sniper</h3>
+    <section id="strategies" aria-labelledby="strategies-heading">
+      <h2 id="strategies-heading">Four strategies, honestly documented</h2>
+      <div class="panel-list">
+        <div class="panel-item">
+          <div class="panel-item__head"><a href="strategies.html#launch-sniper">launch-sniper</a></div>
           <p class="edge">Enter new launchpad coins that clear round-trip + deployer-concentration filters, exit on TP/stop/time.</p>
           <ul>
             <li>Most new launches go to zero — negative-carry unless winners cover losers</li>
             <li>Honeypots can toggle a sell tax after entry</li>
           </ul>
         </div>
-        <div class="card">
-          <h3>momentum</h3>
+        <div class="panel-item">
+          <div class="panel-item__head"><a href="strategies.html#momentum">momentum</a></div>
           <p class="edge">Volume+price breakouts on already-graduated (liquid) tokens, trailing-stop exits.</p>
           <ul>
             <li>Breakouts on thin pools are trivially fakeable</li>
             <li>No edge in a flat or declining market — trend-only by design</li>
           </ul>
         </div>
-        <div class="card">
-          <h3>premium-watch</h3>
+        <div class="panel-item">
+          <div class="panel-item__head"><a href="strategies.html#premium-watch">premium-watch</a></div>
           <p class="edge">Tracks Chainlink-vs-DEX spread on Stock Tokens. <strong>Alerts-only by default</strong> — trading needs explicit eligibility.</p>
           <ul>
             <li>A premium can be correct — fading it loses on purpose</li>
             <li>No shorting primitive — only discounts are ever tradeable</li>
           </ul>
         </div>
-        <div class="card">
-          <h3>llm-strategist <span class="badge" style="margin-left:.4em">optional</span></h3>
+        <div class="panel-item">
+          <div class="panel-item__head"><a href="strategies.html#llm-strategist">llm-strategist</a> <span class="badge">optional</span></div>
           <p class="edge">Bring your own key (Claude, OpenAI, Groq, or OpenRouter) — an LLM weighs the same on-chain signals launch-sniper checks mechanically, holistically instead of against fixed cutoffs.</p>
           <ul>
             <li>Disabled unless <code>HOOD_LLM_PROVIDER</code> + <code>HOOD_LLM_API_KEY</code> are set</li>
@@ -102,15 +136,18 @@
           </ul>
         </div>
       </div>
-      <p><a href="strategies.html">Full strategy docs with live examples →</a></p>
+      <p><a href="strategies.html">Full strategy docs, one at a time →</a></p>
     </section>
 
-    <div class="callout danger">
-      <strong>⚠ Risk disclaimer.</strong> This software can autonomously sign and broadcast real
-      transactions with real funds in live mode. Trading is risky — most new memecoin launches go
-      to zero. Paper mode is the default and touches no funds. Read the full disclaimer in the
-      <a href="https://github.com/nirholas/hood-traders#readme" target="_blank" rel="noopener">README</a>
-      before funding a wallet.
+    <div id="risk-disclaimer" class="callout callout--danger">
+      <span class="callout__label">risk disclaimer</span>
+      <p>
+        This software can autonomously sign and broadcast real transactions with real funds in live
+        mode. Trading is risky — most new memecoin launches go to zero. Paper mode is the default
+        and touches no funds. Read the full disclaimer in the
+        <a href="https://github.com/nirholas/robinhood-chain-trading-bot#readme" target="_blank" rel="noopener">README</a>
+        before funding a wallet.
+      </p>
     </div>
 
     <footer class="footer">
@@ -119,7 +156,16 @@
     </footer>
   </div>
 
+  <div class="cmdbar" role="presentation">
+    <span class="cmdbar__prompt" aria-hidden="true">:</span>
+    <input id="cmdbar-input" class="cmdbar__input" type="text" role="combobox" aria-expanded="false" aria-controls="cmdbar-listbox" aria-autocomplete="list" aria-label="Jump to a page or section" autocomplete="off" spellcheck="false" placeholder="jump to&hellip; try &quot;arch&quot;, &quot;llm&quot;, &quot;quick&quot;">
+    <span id="cmdbar-status" class="cmdbar__status" aria-live="polite"></span>
+    <span class="cmdbar__hint">/ or : focus · ↑↓ Enter · Esc</span>
+  </div>
+  <ul id="cmdbar-listbox" class="cmdbar__listbox" role="listbox" aria-label="Matching sections" hidden></ul>
+
   <script src="live-ticker.js" type="module"></script>
   <script src="session-loader.js" type="module"></script>
+  <script src="command-bar.js" type="module"></script>
 </body>
 </html>
