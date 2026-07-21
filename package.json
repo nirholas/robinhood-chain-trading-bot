@@ -1,75 +1,75 @@
 {
-	"name": "hood-traders",
-	"version": "0.2.0",
-	"description": "A framework and runnable fleet of autonomous agents that trade Robinhood Chain (4663) memecoins and watch Stock Token premium/discount — real quotes, real risk caps, real signed swaps, live P&L dashboard.",
-	"keywords": [
-		"robinhood-chain",
-		"trading-agent",
-		"autonomous-agent",
-		"memecoin",
-		"stock-tokens",
-		"usdg",
-		"viem",
-		"defi"
-	],
-	"license": "SEE LICENSE IN LICENSE",
-	"author": "nirholas (https://x.com/nichxbt)",
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/nirholas/hood-traders.git"
-	},
-	"homepage": "https://nirholas.github.io/hood-traders/",
-	"bugs": {
-		"url": "https://github.com/nirholas/hood-traders/issues"
-	},
-	"type": "module",
-	"engines": {
-		"node": ">=20"
-	},
-	"sideEffects": false,
-	"main": "./dist/index.js",
-	"types": "./dist/index.d.ts",
-	"exports": {
-		".": {
-			"types": "./dist/index.d.ts",
-			"import": "./dist/index.js"
-		},
-		"./package.json": "./package.json"
-	},
-	"files": [
-		"dist",
-		"dashboard",
-		"README.md",
-		"LICENSE"
-	],
-	"bin": {
-		"hood-traders": "./dist/main.js"
-	},
-	"scripts": {
-		"build": "tsup",
-		"start": "node dist/main.js",
-		"dev": "tsx watch src/main.ts",
-		"fleet": "tsx src/main.ts",
-		"typecheck": "tsc --noEmit",
-		"test": "vitest run tests/unit",
-		"test:e2e": "vitest run tests/e2e --testTimeout 120000",
-		"snapshot": "tsx scripts/capture-snapshot.ts",
-		"testnet-trade": "tsx scripts/testnet-trade.ts",
-		"capture-session": "node scripts/capture-session.mjs"
-	},
-	"dependencies": {
-		"better-sqlite3": "^11.8.0",
-		"hoodchain": "^0.1.1",
-		"viem": "^2.55.0",
-		"ws": "^8.18.0"
-	},
-	"devDependencies": {
-		"@types/better-sqlite3": "^7.6.0",
-		"@types/node": "^24.0.0",
-		"@types/ws": "^8.18.0",
-		"tsup": "^8.5.0",
-		"tsx": "^4.19.0",
-		"typescript": "^5.9.0",
-		"vitest": "^3.2.0"
-	}
+  "name": "hood-traders",
+  "version": "0.2.0",
+  "description": "A framework and runnable fleet of autonomous agents that trade Robinhood Chain (4663) memecoins and watch Stock Token premium/discount — real quotes, real risk caps, real signed swaps, live P&L dashboard.",
+  "keywords": [
+    "robinhood-chain",
+    "trading-agent",
+    "autonomous-agent",
+    "memecoin",
+    "stock-tokens",
+    "usdg",
+    "viem",
+    "defi"
+  ],
+  "license": "SEE LICENSE IN LICENSE",
+  "author": "nirholas (https://x.com/nichxbt)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nirholas/robinhood-chain-trading-bot.git"
+  },
+  "homepage": "https://nirholas.github.io/robinhood-chain-trading-bot/",
+  "bugs": {
+    "url": "https://github.com/nirholas/robinhood-chain-trading-bot/issues"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "dashboard",
+    "README.md",
+    "LICENSE"
+  ],
+  "bin": {
+    "hood-traders": "./dist/main.js"
+  },
+  "scripts": {
+    "build": "tsup",
+    "start": "node dist/main.js",
+    "dev": "tsx watch src/main.ts",
+    "fleet": "tsx src/main.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run tests/unit",
+    "test:e2e": "vitest run tests/e2e --testTimeout 120000",
+    "snapshot": "tsx scripts/capture-snapshot.ts",
+    "testnet-trade": "tsx scripts/testnet-trade.ts",
+    "capture-session": "node scripts/capture-session.mjs"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.8.0",
+    "hoodchain": "^0.1.1",
+    "viem": "^2.55.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.0",
+    "@types/node": "^24.0.0",
+    "@types/ws": "^8.18.0",
+    "tsup": "^8.5.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
+  }
 }
