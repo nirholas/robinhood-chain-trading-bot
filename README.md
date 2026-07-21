@@ -1,5 +1,9 @@
 # hood-traders
 
+[![Run on Google Cloud](https://deploy.cloud.run/button.svg)](https://deploy.cloud.run?git_repo=https://github.com/nirholas/robinhood-chain-trading-bot)
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/nirholas/robinhood-chain-trading-bot)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/nirholas/robinhood-chain-trading-bot)
+
 Autonomous trading agents for **Robinhood Chain** — a live fleet that trades memecoins on NOXA
 and The Odyssey, and watches Stock Token premium/discount against Chainlink, with real signed
 swaps, hard risk caps, and a live decision-journal dashboard.
@@ -208,31 +212,43 @@ to live RPCs.
 
 ## Deploy
 
-### Docker / Google Cloud Run (preferred)
+The fleet (the trading process + its dashboard) is a **long-running container** — it needs an
+always-on host, not a serverless function. The docs site (this README's screenshots, architecture,
+and strategy pages under [`docs/`](docs/)) is a separate, plain static site and deploys anywhere
+static hosting works.
+
+### The fleet — Docker / Google Cloud Run (required target; click-to-deploy above)
 
 ```bash
-docker build -f Dockerfile -t hood-traders ..   # context = parent dir, see Dockerfile comment
+docker build -t hood-traders .
 docker run -p 4670:4670 -v hood-traders-data:/app/data hood-traders
 
 # Cloud Run
 gcloud run deploy hood-traders \
-  --source .. \
-  --dockerfile hood-traders/Dockerfile \
+  --source . \
   --region us-central1 \
   --port 4670 \
   --set-env-vars HOOD_NETWORK=mainnet,FLEET_MAX_DAILY_SPEND_USDG=250 \
   --min-instances 1 --max-instances 1   # single instance — the journal is a local SQLite file
 ```
 
-For live trading on Cloud Run, set `HOOD_TRADERS_LIVE` and `ROBINHOOD_CHAIN_PRIVATE_KEY` via
-`--set-secrets` (Secret Manager), never `--set-env-vars`, and mount a persistent volume (Cloud Run
-+ a GCS FUSE mount, or migrate the journal to Cloud SQL) so the decision journal survives restarts.
+The **Run on Google Cloud** button above does this for you: it clones this repo, builds the
+Dockerfile, and deploys straight to Cloud Run. For live trading, set `HOOD_TRADERS_LIVE` and
+`ROBINHOOD_CHAIN_PRIVATE_KEY` via `--set-secrets` (Secret Manager), never `--set-env-vars`, and
+mount a persistent volume (Cloud Run + a GCS FUSE mount, or migrate the journal to Cloud SQL) so
+the decision journal survives restarts. Any other always-on container host (Fly.io, Railway,
+a VPS) works the same way — build the image, run it, keep the data volume.
 
-### Vercel
+Vercel's serverless functions are not a fit for the fleet itself (a long-running tick loop +
+stateful SQLite journal) — the Vercel button above deploys the **docs site**, not the fleet.
 
-Vercel's serverless functions are not a fit for a long-running tick loop + stateful SQLite
-journal — this is a **long-running process**, deploy it to Cloud Run, Fly.io, Railway, or any
-always-on container host instead.
+### The docs site — Cloudflare, Vercel, or GitHub Pages (all click-to-deploy)
+
+`docs/` is a plain static site (no build step). GitHub Pages serves it automatically from this
+repo (`Settings → Pages → Deploy from a branch → main → /docs`) once enabled — that's the default,
+canonical home: <https://nirholas.github.io/robinhood-chain-trading-bot/>. The **Deploy to
+Cloudflare** and **Deploy with Vercel** buttons above are equivalent one-click alternatives
+(`wrangler.json`/`vercel.json` at the repo root point both at `docs/`, no build command needed).
 
 ## License
 

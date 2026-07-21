@@ -1,0 +1,7 @@
+{
+	"name": "robinhood-chain-trading-bot-docs",
+	"compatibility_date": "2025-10-08",
+	"assets": {
+		"directory": "./docs"
+	}
+}
