@@ -253,3 +253,7 @@ Cloudflare** and **Deploy with Vercel** buttons above are equivalent one-click a
 ## License
 
 All rights reserved. See [LICENSE](LICENSE).
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=nirholas/robinhood-chain-trading-bot&type=Date)](https://www.star-history.com/#nirholas/robinhood-chain-trading-bot&Date)
