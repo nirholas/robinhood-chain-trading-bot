@@ -1,0 +1,28 @@
+# robinhood-chain-trading-bot
+
+> Open-source autonomous trading bot for Robinhood Chain. Four strategies: launch sniping, momentum, Stock Token premium/discount arbitrage, and a bring-your-own-key LLM strategist (Claude, OpenAI, Groq, or OpenRouter). Real risk caps, real signed swaps, paper mode by default, live P&L dashboard.
+
+robinhood-chain-trading-bot is an open-source repository by nirholas, part of the three.ws ecosystem.
+
+## Docs
+
+- [README](https://github.com/nirholas/robinhood-chain-trading-bot/blob/HEAD/README.md): install, usage and reference
+- [What it does](https://github.com/nirholas/robinhood-chain-trading-bot/blob/HEAD/README.md#what-it-does)
+- [Quickstart: paper mode in 5 minutes](https://github.com/nirholas/robinhood-chain-trading-bot/blob/HEAD/README.md#quickstart-paper-mode-in-5-minutes)
+- [Going live](https://github.com/nirholas/robinhood-chain-trading-bot/blob/HEAD/README.md#going-live)
+- [Architecture](https://github.com/nirholas/robinhood-chain-trading-bot/blob/HEAD/README.md#architecture)
+- [Strategies](https://github.com/nirholas/robinhood-chain-trading-bot/blob/HEAD/README.md#strategies)
+- [Configuration](https://github.com/nirholas/robinhood-chain-trading-bot/blob/HEAD/README.md#configuration)
+- [Kill switch](https://github.com/nirholas/robinhood-chain-trading-bot/blob/HEAD/README.md#kill-switch)
+- [Development](https://github.com/nirholas/robinhood-chain-trading-bot/blob/HEAD/README.md#development)
+- [AGENTS.md](https://github.com/nirholas/robinhood-chain-trading-bot/blob/HEAD/AGENTS.md): guidance for coding agents
+- [Full text for LLMs](https://github.com/nirholas/robinhood-chain-trading-bot/blob/HEAD/llms-full.txt): the README inlined
+
+## Project
+
+- [Source](https://github.com/nirholas/robinhood-chain-trading-bot)
+- [Issues](https://github.com/nirholas/robinhood-chain-trading-bot/issues)
+- [Discussions](https://github.com/nirholas/robinhood-chain-trading-bot/discussions)
+- [Homepage](https://nirholas.github.io/robinhood-chain-trading-bot/)
+- [three.ws](https://three.ws): the platform this is part of
+- [All repositories by nirholas](https://github.com/nirholas/nirholas#readme)

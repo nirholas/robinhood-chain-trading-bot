@@ -1,0 +1,261 @@
+# robinhood-chain-trading-bot
+
+> Open-source autonomous trading bot for Robinhood Chain. Four strategies: launch sniping, momentum, Stock Token premium/discount arbitrage, and a bring-your-own-key LLM strategist (Claude, OpenAI, Groq, or OpenRouter). Real risk caps, real signed swaps, paper mode by default, live P&L dashboard.
+
+# hood-traders
+
+[![Run on Google Cloud](https://deploy.cloud.run/button.svg)](https://deploy.cloud.run?git_repo=https://github.com/nirholas/robinhood-chain-trading-bot)
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/nirholas/robinhood-chain-trading-bot)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/nirholas/robinhood-chain-trading-bot)
+
+Autonomous trading agents for **Robinhood Chain**: a live fleet that trades memecoins on NOXA
+and The Odyssey, and watches Stock Token premium/discount against Chainlink, with real signed
+swaps, hard risk caps, and a live decision-journal dashboard.
+
+> ## ⚠ Risk disclaimer
+> This software can autonomously sign and broadcast **real transactions with real funds** when
+> run in live mode. Trading is risky. Strategies here are honestly documented, not guaranteed: > **most new memecoin launches go to zero**, thin Stock Token pools can move against you, and
+> software has bugs. Read the [strategy failure modes](#strategies) before funding a wallet.
+> **Paper mode is the default and does not touch real funds.** Live mode requires you to set
+> `HOOD_TRADERS_LIVE=1` **and** provide a funded private key: never enabled by accident. There
+> are no guarantees, no warranty, and no recovery for funds lost to a bug, a bad market, or a
+> misconfigured risk cap. Start in paper mode. Use a wallet you can afford to lose. You are
+> responsible for every transaction this software signs on your behalf.
+
+Built on [`hoodchain`](../robinhood-chain-sdk): the Robinhood Chain (chain ID 4663) TypeScript
+SDK for Stock Tokens, Chainlink quotes, Uniswap v3 swaps, USDG, and launchpad watchers.
+`hoodkit`/`hood-js` (the wave-2 convenience wrappers) had not shipped at the time this package
+was built, so `hood-traders` talks to `hoodchain` directly: swapping in a wrapper later is a
+drop-in change confined to `src/framework/market.ts`.
+
+## What it does
+
+- **Framework** (`src/framework/`): agent = strategy + wallet + risk budget + journal. Every tick
+  runs observe → decide → simulate (a real Uniswap v3 `eth_call`) → risk-check (fail-closed) →
+  execute → journal.
+- **Four strategies** (`src/strategies/`): `launch-sniper`, `momentum`, `premium-watch`, and
+  `llm-strategist`: each with an honestly documented edge hypothesis and failure modes (see
+  [Strategies](#strategies)). `llm-strategist` is optional and bring-your-own-key: point it at
+  Claude, OpenAI, Groq, or OpenRouter and it judges launches the other strategies discover, using
+  the same real on-chain signals, subject to the exact same risk engine as everything else.
+- **Live dashboard** (`dashboard/`): fleet overview, per-agent equity curve, open positions, the
+  full decision journal (why each trade fired: or didn't), and a kill button.
+- **Risk layer** (`src/framework/risk.ts`): per-agent position cap, daily spend cap, fleet-wide
+  daily spend cap, slippage bound, and cooldown: every one enforced *before* execution, not
+  advisory.
+- **Kill switch** (`src/framework/kill.ts`): SIGINT/SIGTERM, a `KILL` file, or `POST /api/kill`:   any of the three halts new orders across the whole fleet immediately. It never force-sells; it
+  only stops taking on new risk.
+
+## Quickstart: paper mode in 5 minutes
+
+Paper mode simulates fills against **live** market data (real Chainlink prices, real Uniswap v3
+quotes): it is a real simulation, not fake data. No wallet, no key, no config needed.
+
+```bash
+git clone https://github.com/nirholas/robinhood-chain-trading-bot.git
+cd robinhood-chain-trading-bot
+npm install
+npm run build
+npm run fleet
+```
+
+Open **http://localhost:4670**: the dashboard is live: fleet equity, per-agent P&L, open
+positions, and the decision journal.
+
+Or with Docker (same result, zero local Node/npm needed):
+
+```bash
+cd hood-traders
+docker compose up --build
+```
+
+### About `hoodchain`
+
+`hood-traders` depends on [`hoodchain`](https://www.npmjs.com/package/hoodchain), the Robinhood
+Chain TypeScript SDK, as a normal published npm dependency (`^0.1.1`): `npm install` resolves it
+from the registry like any other package. If you're developing the SDK and this fleet together,
+clone [`robinhood-chain-sdk`](https://github.com/nirholas/robinhood-chain-sdk) as a sibling and
+point `package.json` at `file:../robinhood-chain-sdk` for local iteration; revert to the published
+semver before shipping.
+
+## Going live
+
+Live mode signs and broadcasts real transactions. It requires **both**:
+
+```bash
+cp .env.example .env
+# edit .env:
+HOOD_TRADERS_LIVE=1
+ROBINHOOD_CHAIN_PRIVATE_KEY=0x...   # env var only: never hardcode a key
+```
+
+Missing either one keeps the fleet in paper mode: there is no accidental-live path. Every risk
+cap in `.env.example` applies identically in live mode; they are not paper-mode-only guardrails.
+
+**Stock Token trading** additionally requires `HOOD_STOCK_TOKEN_ELIGIBLE=true`: an explicit
+affirmation that you are not a US/Canada/UK/Switzerland person, per the legal restriction on
+these tokenized debt securities (issuer: Robinhood Assets (Jersey) Ltd). Without it,
+`premium-watch` stays alerts-only and any Stock Token swap attempt throws
+`StockTokenEligibilityError`. Memecoin trading (`launch-sniper`, `momentum`) is never gated.
+
+## Architecture
+
+See [`docs/architecture.html`](docs/architecture.html) for the full observe → decide → simulate →
+risk-check → execute → journal diagram, and how the four strategies plug into it. Short version:
+
+```
+Market (hoodchain SDK, live RPC)
+   │
+   ▼
+Strategy.tick(ctx) ──► Decision { intents[], alerts[] }
+   │
+   ▼
+Agent: for each intent
+   1. simulate : real QuoterV2 eth_call, no state change
+   2. price    : USD notional from the simulated fill
+   3. risk gate: RiskEngine.check(...): fails CLOSED
+   4. execute  : paper: record the simulated fill
+                  live:  buildSwapTx → approve → sendTransaction → wait for receipt
+   5. journal  : every trade AND every refusal, into SQLite
+```
+
+A strategy can never bypass the risk gate: it proposes intents, the agent enforces every cap
+before anything executes, paper or live.
+
+## Strategies
+
+Full docs with live examples: [`docs/strategies.html`](docs/strategies.html). Summary:
+
+| Strategy | Edge hypothesis (short) | Primary failure mode |
+|---|---|---|
+| `launch-sniper` | Opening-minutes volatility on new launches is real; discipline (round-trip + deployer-concentration filters, mechanical exits) harvests a slice of it. | Most new launches go to zero: the stop loss fires often; this is negative-carry unless winners cover losers. |
+| `momentum` | Tokens that survive to graduation and then break out on price reflect real demand, not launch-day noise. | Breakouts on thin pools are trivially fakeable by one wallet; price-only signal has no depth check. |
+| `premium-watch` | Stock Token pools are thin and drift from the Chainlink oracle; buying the discount captures reversion. **Alerts-only by default**: trading requires explicit eligibility + opt-in. | A premium/discount can be *correct* (DEX reacting to news the ≤24h Chainlink heartbeat hasn't caught yet); fading it loses on purpose. No shorting primitive exists. |
+| `llm-strategist` | An LLM (bring your own key) weighs the same round-trip-retention and deployer-concentration signals `launch-sniper` checks mechanically, holistically instead of against fixed cutoffs, and only trades above a confidence threshold. **Disabled unless configured**: see below. | LLM confidence is not calibrated probability; a confidently wrong verdict trades identically to a confidently right one. On-chain data reaching the prompt is attacker-controlled, so the brief is numbers-only by design. One provider, no fallback. |
+
+Every strategy exposes its `meta.edge` / `meta.failureModes` at runtime (`strategy.meta`): the
+dashboard and docs pull the live values, not a stale copy.
+
+### `llm-strategist` setup
+
+Disabled by default: the fleet runs the other three strategies with zero LLM config. To enable it,
+set exactly one provider in `.env`:
+
+```sh
+# any ONE of:
+HOOD_LLM_PROVIDER=anthropic   HOOD_LLM_API_KEY=sk-ant-...
+HOOD_LLM_PROVIDER=openai      HOOD_LLM_API_KEY=sk-...
+HOOD_LLM_PROVIDER=groq        HOOD_LLM_API_KEY=gsk_...
+HOOD_LLM_PROVIDER=openrouter  HOOD_LLM_API_KEY=sk-or-...
+```
+
+`HOOD_LLM_MODEL` is optional: each provider has a sane default (see
+[`src/framework/llm.ts`](src/framework/llm.ts)); set it if a default ever goes stale or you want a
+stronger/cheaper model. `HOOD_LLM_MIN_CONFIDENCE` (default `0.6`) is the minimum LLM-stated
+confidence required to actually place a trade: everything below that is logged to the decision
+journal as an alert, not a trade. Every LLM API call costs money regardless of verdict; a launch
+storm inflates spend with nothing to show for it if you set the confidence bar too low.
+
+## Configuration
+
+All of `.env.example` is optional for paper mode. Key knobs:
+
+| Var | Default | Meaning |
+|---|---|---|
+| `HOOD_NETWORK` | `mainnet` | `mainnet` (4663) or `testnet` (46630) |
+| `HOOD_RPC_URL` | *(viem's public RPC)* | Optional paid RPC (Alchemy recommended for live trading) |
+| `HOOD_TRADERS_LIVE` | `0` | Must be `1` (+ a valid key) to trade real funds |
+| `HOOD_STOCK_TOKEN_ELIGIBLE` | `false` | Non-US-person affirmation gating Stock Token acquisition |
+| `FLEET_MAX_DAILY_SPEND_USDG` | `250` | Hard ceiling across the whole fleet, USD/day |
+| `AGENT_MAX_POSITION_USDG` | `50` | Per-agent, per-token position cap |
+| `AGENT_MAX_DAILY_SPEND_USDG` | `100` | Per-agent daily spend cap |
+| `AGENT_MAX_SLIPPAGE_BPS` | `100` | Per-agent slippage bound (1%) |
+| `AGENT_COOLDOWN_SECONDS` | `60` | Minimum gap between an agent's trades |
+| `KILL_FILE` | `./KILL` | Drop a file here to halt the fleet immediately |
+| `DASHBOARD_PORT` | `4670` | Dashboard + API port |
+| `HOOD_LLM_PROVIDER` | *(unset)* | `anthropic`\|`openai`\|`groq`\|`openrouter`: enables `llm-strategist` when set with `HOOD_LLM_API_KEY` |
+| `HOOD_LLM_API_KEY` | *(unset)* | Your own key for the chosen provider |
+| `HOOD_LLM_MODEL` | *(per-provider default)* | Override the model id |
+| `HOOD_LLM_MIN_CONFIDENCE` | `0.6` | Minimum LLM confidence to trade, else it's alert-only |
+| `HOOD_LLM_TIMEOUT_MS` | `9000` | Per-call timeout before the judge is treated as failed |
+
+## Kill switch
+
+Three independent triggers, all wired the same way: any one halts new orders across every agent:
+
+```bash
+# 1. Ctrl-C the process (SIGINT), or `docker compose stop` (SIGTERM)
+
+# 2. Drop the kill file
+touch KILL          # local
+touch data/KILL      # docker (mounted volume)
+
+# 3. HTTP
+curl -X POST http://localhost:4670/api/kill
+```
+
+The kill switch **never force-sells**: it stops new risk, it doesn't unwind existing positions.
+Deciding whether to exit into whatever caused the panic is an explicit operator call.
+
+## Development
+
+```bash
+npm run typecheck     # tsc --noEmit
+npm test               # unit tests: risk, kill switch, journal, strategies, agent (58 tests)
+npm run test:e2e       # live-network E2E: see below
+npm run snapshot        # capture a fresh live market snapshot into tests/snapshots/
+npm run dev              # tsx watch: fleet + dashboard with hot reload
+```
+
+Unit tests never hit the network: strategy logic is tested against **real recorded market
+snapshots** (`tests/snapshots/`, captured with `npm run snapshot`) fed through a scriptable fake
+market, and risk/kill/journal tests are pure logic. `npm run test:e2e` is the one suite that talks
+to live RPCs.
+
+## Deploy
+
+The fleet (the trading process + its dashboard) is a **long-running container**: it needs an
+always-on host, not a serverless function. The docs site (this README's screenshots, architecture,
+and strategy pages under [`docs/`](docs/)) is a separate, plain static site and deploys anywhere
+static hosting works.
+
+### The fleet: Docker / Google Cloud Run (required target; click-to-deploy above)
+
+```bash
+docker build -t hood-traders .
+docker run -p 4670:4670 -v hood-traders-data:/app/data hood-traders
+
+# Cloud Run
+gcloud run deploy hood-traders \
+  --source . \
+  --region us-central1 \
+  --port 4670 \
+  --set-env-vars HOOD_NETWORK=mainnet,FLEET_MAX_DAILY_SPEND_USDG=250 \
+  --min-instances 1 --max-instances 1   # single instance: the journal is a local SQLite file
+```
+
+The **Run on Google Cloud** button above does this for you: it clones this repo, builds the
+Dockerfile, and deploys straight to Cloud Run. For live trading, set `HOOD_TRADERS_LIVE` and
+`ROBINHOOD_CHAIN_PRIVATE_KEY` via `--set-secrets` (Secret Manager), never `--set-env-vars`, and
+mount a persistent volume (Cloud Run + a GCS FUSE mount, or migrate the journal to Cloud SQL) so
+the decision journal survives restarts. Any other always-on container host (Fly.io, Railway,
+a VPS) works the same way: build the image, run it, keep the data volume.
+
+Vercel's serverless functions are not a fit for the fleet itself (a long-running tick loop +
+stateful SQLite journal): the Vercel button above deploys the **docs site**, not the fleet.
+
+### The docs site: Cloudflare, Vercel, or GitHub Pages (all click-to-deploy)
+
+`docs/` is a plain static site (no build step). GitHub Pages serves it automatically from this
+repo (`Settings → Pages → Deploy from a branch → main → /docs`) once enabled: that's the default,
+canonical home: <https://nirholas.github.io/robinhood-chain-trading-bot/>. The **Deploy to
+Cloudflare** and **Deploy with Vercel** buttons above are equivalent one-click alternatives
+(`wrangler.json`/`vercel.json` at the repo root point both at `docs/`, no build command needed).
+
+## License
+
+All rights reserved. See [LICENSE](LICENSE).
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=nirholas/robinhood-chain-trading-bot&type=Date)](https://www.star-history.com/#nirholas/robinhood-chain-trading-bot&Date)

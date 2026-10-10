@@ -1,0 +1,9 @@
+cff-version: 1.2.0
+message: If you use this software, please cite it as below.
+title: "robinhood-chain-trading-bot"
+abstract: "Open-source autonomous trading bot for Robinhood Chain. Four strategies: launch sniping, momentum, Stock Token premium/discount arbitrage, and a bring-your-own-key LLM strategist (Claude, OpenAI, Groq, or OpenRouter). Real risk caps, real signed swaps, paper mode by default, live P&L dashboard."
+repository-code: "https://github.com/nirholas/robinhood-chain-trading-bot"
+url: "https://three.ws"
+authors:
+  - name: three.ws
+    website: "https://three.ws"
