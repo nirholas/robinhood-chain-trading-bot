@@ -314,7 +314,12 @@ export class Agent {
         account: this.account,
         chain: this.market.client.chain,
       })
-      await this.market.client.public.waitForTransactionReceipt({ hash })
+      const receipt = await this.market.client.public.waitForTransactionReceipt({ hash })
+      // viem resolves (does not throw) for a mined-but-reverted transaction.
+      if (receipt.status !== 'success') {
+        this.lastError = `swap transaction ${hash} reverted`
+        return null
+      }
       return { hash, amountOutMinimum: tx.amountOutMinimum }
     } catch (err) {
       this.lastError = err instanceof Error ? err.message : String(err)
